@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Legalizaciones de Ruta</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased flex flex-col min-h-screen bg-slate-50">
+
+    <!-- Header Principal -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo & Titulo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                        <i class="fa-solid fa-route text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 text-lg leading-tight">Control de Presupuestos de Ruta</h1>
+                        <p class="text-xs text-slate-500">Módulo de Legalizaciones Quincenales</p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción Global -->
+                <div class="flex items-center gap-3">
+                    <button onclick="openSheetsModal()" id="sheetsStatusBtn" class="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition shadow-sm">
+                        <span id="sheetsStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span id="sheetsStatusText" class="hidden sm:inline">Google Sheets</span>
+                    </button>
+
+                    <button onclick="exportCSV()" class="inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm">
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                        <span class="hidden sm:inline">Exportar CSV</span>
+                    </button>
+                    
+                    <button onclick="openNewModal()" class="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition shadow-md shadow-brand-600/20">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>+ Nueva Legalización</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Seccion KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Consignado</p>
+                    <h3 id="kpiConsigned" class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">$0</h3>
+                    <p class="text-xs text-slate-400 mt-1"><span id="kpiTotalPromotores">0</span> registros procesados</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Legalizado</p>
+                    <h3 id="kpiLegalized" class="text-xl sm:text-2xl font-bold text-emerald-600 mt-1">$0</h3>
+                    <p class="text-xs text-emerald-600 mt-1 font-medium"><i class="fa-solid fa-chart-line mr-1"></i> Cumplimiento: <span id="kpiPercent">0%</span></p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Monto Pendiente</p>
+                    <h3 id="kpiPending" class="text-xl sm:text-2xl font-bold text-rose-600 mt-1">$0</h3>
+                    <p class="text-xs text-rose-500 mt-1 font-medium"><span id="kpiPendingCount">0</span> promotores pendientes</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Zonas Activas</p>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">11 Zonas</h3>
+                    <p class="text-xs text-slate-400 mt-1">Cobertura Nacional</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seccion de Graficos Analiticos -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Ejecución Presupuestal por Zona</h2>
+                    <span class="text-xs text-slate-400">Consignado vs Legalizado</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="zoneChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Estado de Legalización</h2>
+                    <span class="text-xs text-slate-400">Proporción</span>
+                </div>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Filtros y Búsqueda -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <!-- Buscador -->
+                <div class="lg:col-span-2 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar por promotor o zona..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                </div>
+
+                <!-- Filtro Estado -->
+                <div>
+                    <select id="filterStatus" onchange="applyFilters()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                        <option value="">Todos los Estados</option>
+                        <option value="Legalizado">Legalizado (Verde)</option>
+                        <option value="Pendiente">Pendiente (Rojo)</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Coordinador -->
+                <div>
+                    <select id="filterCoordinator" onchange="applyFilters()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                        <option value="">Todos los Coordinadores</option>
+                        <option value="Joan Quintero">Joan Quintero</option>
+                        <option value="Carlos Gallego">Carlos Gallego</option>
+                        <option value="Jefferson Morales">Jefferson Morales</option>
+                        <option value="Camilo Lievano">Camilo Lievano</option>
+                        <option value="Camila Matallana">Camila Matallana</option>
+                        <option value="Juan Miguel Cardenas">Juan Miguel Cardenas</option>
+                        <option value="Juan Sebastian Gomez">Juan Sebastian Gomez</option>
+                        <option value="Jeisson Lizcano">Jeisson Lizcano</option>
+                        <option value="Luis Miguel Guazo">Luis Miguel Guazo</option>
+                        <option value="Sebastian Roman">Sebastian Roman</option>
+                        <option value="Estefanny Ospina">Estefanny Ospina</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Zona -->
+                <div>
+                    <select id="filterZone" onchange="applyFilters()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                        <option value="">Todas las Zonas</option>
+                        <option value="Antioquia 1">Antioquia 1</option>
+                        <option value="Antioquia 2">Antioquia 2</option>
+                        <option value="Centro 1">Centro 1</option>
+                        <option value="Centro 2">Centro 2</option>
+                        <option value="Centro 3">Centro 3</option>
+                        <option value="Costa 1">Costa 1</option>
+                        <option value="Costa 2">Costa 2</option>
+                        <option value="Eje Tolhuca">Eje Tolhuca</option>
+                        <option value="Occidente">Occidente</option>
+                        <option value="Santander">Santander</option>
+                        <option value="Santander 2">Santander 2</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Mes -->
+                <div>
+                    <select id="filterMonth" onchange="applyFilters()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                        <option value="">Todos los Meses</option>
+                        <option value="Enero">Enero</option>
+                        <option value="Febrero">Febrero</option>
+                        <option value="Marzo">Marzo</option>
+                        <option value="Abril">Abril</option>
+                        <option value="Mayo">Mayo</option>
+                        <option value="Junio">Junio</option>
+                        <option value="Julio">Julio</option>
+                        <option value="Agosto">Agosto</option>
+                        <option value="Septiembre">Septiembre</option>
+                        <option value="Octubre">Octubre</option>
+                        <option value="Noviembre">Noviembre</option>
+                        <option value="Diciembre">Diciembre</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+                <div class="flex items-center gap-2">
+                    <select id="filterFortnight" onchange="applyFilters()" class="px-2.5 py-1 border border-slate-300 rounded-lg outline-none bg-white">
+                        <option value="">Todas las Quincenas</option>
+                        <option value="1ra Quincena">1ra Quincena</option>
+                        <option value="2da Quincena">2da Quincena</option>
+                    </select>
+                    <span class="text-slate-400">| Mostrando <span id="recordCount" class="font-bold text-slate-700">0</span> registros</span>
+                </div>
+
+                <!-- Toggle entre Tabla y Cards -->
+                <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    <button id="btnTableView" onclick="switchView('table')" class="px-3 py-1 rounded-md text-xs font-medium bg-white text-slate-800 shadow-sm transition">
+                        <i class="fa-solid fa-table-list mr-1"></i> Tabla
+                    </button>
+                    <button id="btnCardView" onclick="switchView('cards')" class="px-3 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition">
+                        <i class="fa-solid fa-border-all mr-1"></i> Tarjetas
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Tabla -->
+        <div id="tableViewSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                            <th class="py-3 px-4">Estado</th>
+                            <th class="py-3 px-4 cursor-pointer hover:bg-slate-100" onclick="sortTable('promoter')">Promotor <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 cursor-pointer hover:bg-slate-100" onclick="sortTable('coordinator')">Coordinador <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 cursor-pointer hover:bg-slate-100" onclick="sortTable('zone')">Zona / Período <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4">Contrato / Temp</th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:bg-slate-100" onclick="sortTable('consigned')">Consignado <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:bg-slate-100" onclick="sortTable('legalized')">Legalizado <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:bg-slate-100" onclick="sortTable('favor')">Valor a Favor <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 text-right cursor-pointer hover:bg-slate-100" onclick="sortTable('reintegrar')">Valor a Reintegrar <i class="fa-solid fa-sort text-slate-300 ml-1"></i></th>
+                            <th class="py-3 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-xs divide-y divide-slate-100">
+                        <!-- Filas cargadas dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginacion -->
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                <div class="flex items-center gap-2">
+                    <span>Mostrar</span>
+                    <select id="pageSizeSelect" onchange="changePageSize()" class="px-2 py-1 border border-slate-300 rounded-lg outline-none bg-white">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span>registros por página</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="pageIndicator">Página 1 de 1</span>
+                    <div class="inline-flex gap-1">
+                        <button id="btnPrevPage" onclick="prevPage()" class="px-2.5 py-1 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 transition">Anterior</button>
+                        <button id="btnNextPage" onclick="nextPage()" class="px-2.5 py-1 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 transition">Siguiente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Tarjetas (Cards) -->
+        <div id="cardsViewSection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
+            <!-- Tarjetas cargadas dinamicamente -->
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: Nueva Legalización -->
+    <div id="newModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <h3 class="text-base font-bold text-slate-900"><i class="fa-solid fa-plus text-brand-600 mr-2"></i>Nueva Legalización de Ruta</h3>
+                <button onclick="closeNewModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="submitNewLegalization(event)" class="p-6 space-y-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nombre Promotor *</label>
+                        <input type="text" id="newPromoter" required placeholder="Ej: Laura Ramírez" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Coordinador a Cargo *</label>
+                        <select id="newCoordinator" onchange="autoSelectZone()" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                            <option value="Joan Quintero">Joan Quintero</option>
+                            <option value="Carlos Gallego">Carlos Gallego</option>
+                            <option value="Jefferson Morales">Jefferson Morales</option>
+                            <option value="Camilo Lievano">Camilo Lievano</option>
+                            <option value="Camila Matallana">Camila Matallana</option>
+                            <option value="Juan Miguel Cardenas">Juan Miguel Cardenas</option>
+                            <option value="Juan Sebastian Gomez">Juan Sebastian Gomez</option>
+                            <option value="Jeisson Lizcano">Jeisson Lizcano</option>
+                            <option value="Luis Miguel Guazo">Luis Miguel Guazo</option>
+                            <option value="Sebastian Roman">Sebastian Roman</option>
+                            <option value="Estefanny Ospina">Estefanny Ospina</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Zona</label>
+                        <input type="text" id="newZone" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-600 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Año</label>
+                        <input type="number" id="newYear" value="2026" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Mes *</label>
+                        <select id="newMonth" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                            <option value="Marzo">Marzo</option>
+                            <option value="Abril">Abril</option>
+                            <option value="Mayo">Mayo</option>
+                            <option value="Junio">Junio</option>
+                            <option value="Julio">Julio</option>
+                            <option value="Agosto">Agosto</option>
+                            <option value="Septiembre">Septiembre</option>
+                            <option value="Octubre">Octubre</option>
+                            <option value="Noviembre">Noviembre</option>
+                            <option value="Diciembre">Diciembre</option>
+                            <option value="Enero">Enero</option>
+                            <option value="Febrero">Febrero</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Quincena *</label>
+                        <select id="newFortnight" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                            <option value="1ra Quincena">1ra Quincena</option>
+                            <option value="2da Quincena">2da Quincena</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Empresa Temporal</label>
+                        <input type="text" id="newTemporal" placeholder="Ej: Manpower / Adecco" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Valor Consignado ($ COP) *</label>
+                        <input type="number" id="newConsigned" required min="0" placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 font-bold text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Valor Legalizado ($ COP)</label>
+                        <input type="number" id="newLegalized" min="0" placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 font-bold text-emerald-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Observaciones / Notas de Ruta</label>
+                    <textarea id="newNotes" rows="2" placeholder="Detalles de facturas, viáticos o soportes..." class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeNewModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition shadow-md shadow-brand-600/20">Guardar Legalización</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Detalle y Edición -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div id="editAvatar" class="w-9 h-9 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center text-sm">
+                        P
+                    </div>
+                    <div>
+                        <h3 id="editPromoterName" class="font-bold text-slate-900 leading-tight">Nombre Promotor</h3>
+                        <p id="editZoneName" class="text-xs text-slate-500">Zona</p>
+                    </div>
+                </div>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="editRecordId">
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div>
+                        <span class="text-slate-400 block">Coordinador</span>
+                        <span id="editCoordinatorName" class="font-semibold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">Período</span>
+                        <span id="editPeriodName" class="font-semibold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">Empresa Temporal</span>
+                        <span id="editTemporalName" class="font-semibold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">Valor Consignado</span>
+                        <input type="text" id="editConsignedVal" readonly class="font-bold text-slate-900 bg-transparent border-none p-0 focus:ring-0">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div>
+                        <span class="text-slate-400 block">Valor a Favor</span>
+                        <span id="editFavorVal" class="font-bold text-blue-600">$0</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block">Valor a Reintegrar</span>
+                        <span id="editReintegrarVal" class="font-bold text-rose-600">$0</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Monto Legalizado ($ COP)</label>
+                        <input type="number" id="editLegalizedAmount" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 font-bold text-emerald-600">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Estado de la Legalización</label>
+                        <select id="editStatusSelect" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                            <option value="Legalizado">Legalizado (Verde)</option>
+                            <option value="Pendiente">Pendiente (Rojo)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Observaciones / Notas</label>
+                        <textarea id="editNotes" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeDetailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition">Cancelar</button>
+                    <button type="button" onclick="saveDetailChanges()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-md shadow-emerald-600/20">Actualizar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Mapeo Oficial de Coordinadores y Zonas */
+        const coordinatorZoneMap = {
+            "Joan Quintero": "Antioquia 1",
+            "Carlos Gallego": "Antioquia 2",
+            "Jefferson Morales": "Centro 1",
+            "Camilo Lievano": "Centro 2",
+            "Camila Matallana": "Centro 3",
+            "Juan Miguel Cardenas": "Santander",
+            "Juan Sebastian Gomez": "Santander 2",
+            "Jeisson Lizcano": "Costa 1",
+            "Luis Miguel Guazo": "Costa 2",
+            "Sebastian Roman": "Eje Tolhuca",
+            "Estefanny Ospina": "Occidente"
+        };
+
+        /* Estado global */
+        let googleSheetUrl = localStorage.getItem('googleSheetUrl') || '';
+        let isConnectedToSheets = false;
+
+        /* Datos de Prueba Realistas */
+        let mockData = [
+            { id: 1, promoter: "Jhon Alexander Toro", coordinator: "Joan Quintero", zone: "Antioquia 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1500000, legalized: 1500000, status: "Legalizado", notes: "Soportes completos entregados a tiempo." },
+            { id: 2, promoter: "María Fernanda Calle", coordinator: "Carlos Gallego", zone: "Antioquia 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1200000, legalized: 800000, status: "Legalizado", notes: "Acompaña facturas parciales." },
+            { id: 3, promoter: "Carlos Andrés Villa", coordinator: "Jefferson Morales", zone: "Centro 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 2100000, legalized: 2350000, status: "Legalizado", notes: "Exceso de gastos por viáticos adicionales." },
+            { id: 4, promoter: "Diana Marcela Hoyos", coordinator: "Camilo Lievano", zone: "Centro 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1800000, legalized: 0, status: "Pendiente", notes: "En revisión por viáticos extra." },
+            { id: 5, promoter: "Lina María Orozco", coordinator: "Camila Matallana", zone: "Centro 3", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1350000, legalized: 1350000, status: "Legalizado", notes: "Paz y salvo firmado." },
+            { id: 6, promoter: "Esteban Gutiérrez", coordinator: "Juan Miguel Cardenas", zone: "Santander", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Acción", consigned: 1600000, legalized: 0, status: "Pendiente", notes: "Pendiente envío de tiquetes." },
+            { id: 7, promoter: "Mateo Bermúdez", coordinator: "Juan Sebastian Gomez", zone: "Santander 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1400000, legalized: 1400000, status: "Legalizado", notes: "Legalización OK." },
+            { id: 8, promoter: "Vanessa Restrepo", coordinator: "Jeisson Lizcano", zone: "Costa 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1900000, legalized: 2100000, status: "Legalizado", notes: "Reintegro aprobado." },
+            { id: 9, promoter: "Santiago Patiño", coordinator: "Luis Miguel Guazo", zone: "Costa 2", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1750000, legalized: 1750000, status: "Legalizado", notes: "Cierre de mes ok." },
+            { id: 10, promoter: "Camila Andrea Rios", coordinator: "Sebastian Roman", zone: "Eje Tolhuca", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1300000, legalized: 1300000, status: "Legalizado", notes: "Completo." },
+            { id: 11, promoter: "Andrés Felipe Gómez", coordinator: "Estefanny Ospina", zone: "Occidente", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 1650000, legalized: 0, status: "Pendiente", notes: "Revisión de tiquetes." }
+        ];
+
+        let filteredData = [...mockData];
+        let currentView = 'table';
+        let currentPage = 1;
+        let pageSize = 10;
+        let sortColumn = '';
+        let sortAsc = true;
+
+        let zoneChartInstance = null;
+        let statusChartInstance = null;
+
+        function formatCOP(val) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
+        }
+
+        /* Inicialización Segura */
+        window.onload = function() {
+            initCharts();
+            if (googleSheetUrl) {
+                const urlInput = document.getElementById('sheetUrlInput');
+                if (urlInput) urlInput.value = googleSheetUrl;
+                loadFromGoogleSheets();
+            } else {
+                updateSheetsBadgeStatus(false, 'Modo Demo / Local');
+                applyFilters();
+            }
+        };
+
+        /* Google Sheets Integration */
+        function openSheetsModal() {
+            const modal = document.getElementById('sheetsModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeSheetsModal() {
+            const modal = document.getElementById('sheetsModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function loadFromGoogleSheets() {
+            if (!googleSheetUrl) return;
+
+            updateSheetsBadgeStatus(null, 'Sincronizando...');
+
+            try {
+                const res = await fetch(googleSheetUrl);
+                const data = await res.json();
+
+                if (Array.isArray(data)) {
+                    mockData = data.map(item => {
+                        const cons = parseFloat(item.consignado || item.consigned) || 0;
+                        const leg = parseFloat(item.legalizado || item.legalized) || 0;
+                        const autoStatus = leg > 0 ? 'Legalizado' : 'Pendiente';
+
+                        return {
+                            id: parseInt(item.id) || Date.now(),
+                            promoter: item.promoter || item.promotor || '',
+                            coordinator: item.coordinator || item.coordinador || '',
+                            zone: item.zone || item.zona || '',
+                            month: item.month || item.mes || '',
+                            fortnight: item.fortnight || item.quincena || '',
+                            year: parseInt(item.year || item.anio) || 2026,
+                            contract: item.contract || item.contrato || 'Obra Labor',
+                            temporal: item.temporal || '',
+                            consigned: cons,
+                            legalized: leg,
+                            status: item.status || autoStatus,
+                            notes: item.notes || item.observaciones || ''
+                        };
+                    });
+
+                    isConnectedToSheets = true;
+                    updateSheetsBadgeStatus(true, 'Google Sheets (Conectado)');
+                    applyFilters();
+                }
+            } catch (err) {
+                console.warn("No se pudo conectar a Google Sheets. Usando datos locales.", err);
+                isConnectedToSheets = false;
+                updateSheetsBadgeStatus(false, 'Error / Modo Local');
+                applyFilters();
+            }
+        }
+
+        function updateSheetsBadgeStatus(isConnected, text) {
+            const dot = document.getElementById('sheetsStatusDot');
+            const btn = document.getElementById('sheetsStatusBtn');
+            const label = document.getElementById('sheetsStatusText');
+
+            if (label) label.innerText = text;
+
+            if (isConnected === true) {
+                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 transition shadow-sm";
+            } else if (isConnected === false) {
+                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition shadow-sm";
+            } else {
+                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping";
+                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-amber-800 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-sm";
+            }
+        }
+
+        async function postToGoogleSheets(itemData) {
+            if (!googleSheetUrl) return;
+            try {
+                await fetch(googleSheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+            } catch (e) {
+                console.error("Error al enviar datos a Google Sheets:", e);
+            }
+        }
+
+        function applyFilters() {
+            const searchEl = document.getElementById('searchInput');
+            const statusEl = document.getElementById('filterStatus');
+            const coordEl = document.getElementById('filterCoordinator');
+            const zoneEl = document.getElementById('filterZone');
+            const monthEl = document.getElementById('filterMonth');
+            const fortnightEl = document.getElementById('filterFortnight');
+
+            const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            const status = statusEl ? statusEl.value : '';
+            const coord = coordEl ? coordEl.value : '';
+            const zone = zoneEl ? zoneEl.value : '';
+            const month = monthEl ? monthEl.value : '';
+            const fortnight = fortnightEl ? fortnightEl.value : '';
+
+            filteredData = mockData.filter(item => {
+                const computedStatus = item.legalized > 0 ? 'Legalizado' : 'Pendiente';
+                const currentStatus = item.status || computedStatus;
+
+                const matchSearch = !search || item.promoter.toLowerCase().includes(search) || item.zone.toLowerCase().includes(search) || item.coordinator.toLowerCase().includes(search);
+                const matchStatus = !status || currentStatus === status;
+                const matchCoord = !coord || item.coordinator === coord;
+                const matchZone = !zone || item.zone === zone;
+                const matchMonth = !month || item.month === month;
+                const matchFortnight = !fortnight || item.fortnight === fortnight;
+
+                return matchSearch && matchStatus && matchCoord && matchZone && matchMonth && matchFortnight;
+            });
+
+            currentPage = 1;
+            updateUI();
+        }
+
+        function updateUI() {
+            updateKPIs();
+            renderTable();
+            renderCards();
+            updateCharts();
+            const countEl = document.getElementById('recordCount');
+            if (countEl) countEl.innerText = filteredData.length;
+        }
+
+        function updateKPIs() {
+            const totalConsigned = filteredData.reduce((acc, curr) => acc + curr.consigned, 0);
+            const totalLegalized = filteredData.reduce((acc, curr) => acc + curr.legalized, 0);
+            const pendingAmount = Math.max(0, totalConsigned - totalLegalized);
+            const pendingCount = filteredData.filter(i => (i.legalized === 0 || i.status === 'Pendiente')).length;
+            const percent = totalConsigned > 0 ? Math.round((totalLegalized / totalConsigned) * 100) : 0;
+
+            const elCons = document.getElementById('kpiConsigned');
+            const elLeg = document.getElementById('kpiLegalized');
+            const elPend = document.getElementById('kpiPending');
+            const elTotProm = document.getElementById('kpiTotalPromotores');
+            const elPendCount = document.getElementById('kpiPendingCount');
+            const elPct = document.getElementById('kpiPercent');
+
+            if (elCons) elCons.innerText = formatCOP(totalConsigned);
+            if (elLeg) elLeg.innerText = formatCOP(totalLegalized);
+            if (elPend) elPend.innerText = formatCOP(pendingAmount);
+            if (elTotProm) elTotProm.innerText = filteredData.length;
+            if (elPendCount) elPendCount.innerText = pendingCount;
+            if (elPct) elPct.innerText = percent + '%';
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const start = (currentPage - 1) * pageSize;
+            const paginated = filteredData.slice(start, start + pageSize);
+
+            if (paginated.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400">No se encontraron registros de legalización.</td></tr>`;
+                return;
+            }
+
+            paginated.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+
+                const isLegalized = row.legalized > 0;
+                const statusBadge = isLegalized 
+                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Legalizado</span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Pendiente</span>`;
+
+                const valorFavor = row.legalized < row.consigned ? (row.consigned - row.legalized) : 0;
+                const valorReintegrar = row.legalized > row.consigned ? (row.legalized - row.consigned) : 0;
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-4">${statusBadge}</td>
+                    <td class="py-3.5 px-4">
+                        <div class="font-semibold text-slate-900">${row.promoter}</div>
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-700 font-medium">${row.coordinator}</td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-block bg-slate-100 text-slate-700 text-xs px-2 py-0.5 rounded font-medium">${row.zone}</span>
+                        <div class="text-xs text-slate-400 mt-0.5">${row.fortnight} (${row.month})</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">${row.contract}</span>
+                        <div class="text-xs text-slate-400 mt-0.5">${row.temporal || 'N/A'}</div>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-medium text-slate-900">${formatCOP(row.consigned)}</td>
+                    <td class="py-3.5 px-4 text-right font-bold ${isLegalized ? 'text-emerald-600' : 'text-rose-600'}">${formatCOP(row.legalized)}</td>
+                    <td class="py-3.5 px-4 text-right font-semibold ${valorFavor > 0 ? 'text-blue-600' : 'text-slate-400'}">${formatCOP(valorFavor)}</td>
+                    <td class="py-3.5 px-4 text-right font-semibold ${valorReintegrar > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">${formatCOP(valorReintegrar)}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <button onclick="openDetailModal(${row.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Ver / Editar">
+                            <i class="fa-solid fa-pen-to-square text-base"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Actualizar Paginador
+            const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+            const ind = document.getElementById('pageIndicator');
+            const prev = document.getElementById('btnPrevPage');
+            const next = document.getElementById('btnNextPage');
+
+            if (ind) ind.innerText = `Página ${currentPage} de ${totalPages}`;
+            if (prev) prev.disabled = currentPage === 1;
+            if (next) next.disabled = currentPage >= totalPages;
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsViewSection');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const start = (currentPage - 1) * pageSize;
+            const paginated = filteredData.slice(start, start + pageSize);
+
+            paginated.forEach(row => {
+                const isLegalized = row.legalized > 0;
+                const valorFavor = row.legalized < row.consigned ? (row.consigned - row.legalized) : 0;
+                const valorReintegrar = row.legalized > row.consigned ? (row.legalized - row.consigned) : 0;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${row.zone}</span>
+                            <h3 class="font-bold text-slate-900 mt-2">${row.promoter}</h3>
+                        </div>
+                        <span class="w-3 h-3 rounded-full ${isLegalized ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                    </div>
+
+                    <div class="text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex justify-between"><span class="text-slate-400">Coordinador:</span> <span class="font-medium text-slate-700">${row.coordinator}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Período:</span> <span class="font-medium text-slate-700">${row.fortnight} - ${row.month}</span></div>
+                        ${valorFavor > 0 ? `<div class="flex justify-between text-blue-600"><span class="font-medium">Valor a Favor:</span> <span class="font-bold">${formatCOP(valorFavor)}</span></div>` : ''}
+                        ${valorReintegrar > 0 ? `<div class="flex justify-between text-rose-600"><span class="font-medium">Valor a Reintegrar:</span> <span class="font-bold">${formatCOP(valorReintegrar)}</span></div>` : ''}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                        <div>
+                            <span class="text-xs text-slate-400 block">Consignado / Legalizado</span>
+                            <span class="text-xs font-medium text-slate-500">${formatCOP(row.consigned)}</span> / 
+                            <span class="text-sm font-bold ${isLegalized ? 'text-emerald-600' : 'text-rose-600'}">${formatCOP(row.legalized)}</span>
+                        </div>
+                        <button onclick="openDetailModal(${row.id})" class="px-3 py-1.5 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition">
+                            Detalles
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const tableSec = document.getElementById('tableViewSection');
+            const cardsSec = document.getElementById('cardsViewSection');
+            const btnTable = document.getElementById('btnTableView');
+            const btnCard = document.getElementById('btnCardView');
+
+            if (view === 'table') {
+                if (tableSec) tableSec.classList.remove('hidden');
+                if (cardsSec) cardsSec.classList.add('hidden');
+                if (btnTable) btnTable.className = "px-3 py-1 rounded-md text-xs font-medium bg-white text-slate-800 shadow-sm transition";
+                if (btnCard) btnCard.className = "px-3 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition";
+            } else {
+                if (tableSec) tableSec.classList.add('hidden');
+                if (cardsSec) cardsSec.classList.remove('hidden');
+                if (btnCard) btnCard.className = "px-3 py-1 rounded-md text-xs font-medium bg-white text-slate-800 shadow-sm transition";
+                if (btnTable) btnTable.className = "px-3 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 transition";
+            }
+        }
+
+        /* Paginación y Ordenamiento */
+        function prevPage() { if (currentPage > 1) { currentPage--; updateUI(); } }
+        function nextPage() { currentPage++; updateUI(); }
+        function changePageSize() {
+            const select = document.getElementById('pageSizeSelect');
+            if (select) pageSize = parseInt(select.value);
+            currentPage = 1;
+            updateUI();
+        }
+
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = col;
+                sortAsc = true;
+            }
+
+            filteredData.sort((a, b) => {
+                let valA = a[col];
+                let valB = b[col];
+
+                if (col === 'favor') {
+                    valA = a.legalized < a.consigned ? (a.consigned - a.legalized) : 0;
+                    valB = b.legalized < b.consigned ? (b.consigned - b.legalized) : 0;
+                } else if (col === 'reintegrar') {
+                    valA = a.legalized > a.consigned ? (a.legalized - a.consigned) : 0;
+                    valB = b.legalized > b.consigned ? (b.legalized - b.consigned) : 0;
+                }
+
+                if (typeof valA === 'string') {
+                    return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return sortAsc ? valA - valB : valB - valA;
+                }
+            });
+
+            updateUI();
+        }
+
+        /* Modal Handlers */
+        function openNewModal() {
+            const modal = document.getElementById('newModal');
+            if (modal) modal.classList.remove('hidden');
+            autoSelectZone();
+        }
+
+        function closeNewModal() {
+            const modal = document.getElementById('newModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function autoSelectZone() {
+            const coordSelect = document.getElementById('newCoordinator');
+            const zoneInput = document.getElementById('newZone');
+            if (coordSelect && zoneInput) {
+                const coord = coordSelect.value;
+                if (coordinatorZoneMap[coord]) {
+                    zoneInput.value = coordinatorZoneMap[coord];
+                }
+            }
+        }
+
+        function submitNewLegalization(event) {
+            event.preventDefault();
+
+            const promoter = document.getElementById('newPromoter')?.value || '';
+            const coordinator = document.getElementById('newCoordinator')?.value || '';
+            const zone = document.getElementById('newZone')?.value || '';
+            const year = parseInt(document.getElementById('newYear')?.value) || 2026;
+            const month = document.getElementById('newMonth')?.value || 'Marzo';
+            const fortnight = document.getElementById('newFortnight')?.value || '1ra Quincena';
+            const temporal = document.getElementById('newTemporal')?.value || '';
+            const consigned = parseFloat(document.getElementById('newConsigned')?.value) || 0;
+            const legalized = parseFloat(document.getElementById('newLegalized')?.value) || 0;
+            const notes = document.getElementById('newNotes')?.value || '';
+
+            const status = (legalized > 0) ? 'Legalizado' : 'Pendiente';
+
+            const newItem = {
+                id: Date.now(),
+                promoter,
+                coordinator,
+                zone,
+                month,
+                fortnight,
+                year,
+                contract: "Obra Labor",
+                temporal,
+                consigned,
+                legalized,
+                status,
+                notes
+            };
+
+            mockData.unshift(newItem);
+            
+            if (googleSheetUrl) {
+                postToGoogleSheets(newItem);
+            }
+
+            closeNewModal();
+            applyFilters();
+
+            // Limpiar Formulario
+            if (document.getElementById('newPromoter')) document.getElementById('newPromoter').value = '';
+            if (document.getElementById('newConsigned')) document.getElementById('newConsigned').value = '';
+            if (document.getElementById('newLegalized')) document.getElementById('newLegalized').value = '';
+            if (document.getElementById('newNotes')) document.getElementById('newNotes').value = '';
+        }
+
+        function openDetailModal(id) {
+            const item = mockData.find(i => i.id === id);
+            if (!item) return;
+
+            const valorFavor = item.legalized < item.consigned ? (item.consigned - item.legalized) : 0;
+            const valorReintegrar = item.legalized > item.consigned ? (item.legalized - item.consigned) : 0;
+
+            if (document.getElementById('editRecordId')) document.getElementById('editRecordId').value = item.id;
+            if (document.getElementById('editPromoterName')) document.getElementById('editPromoterName').innerText = item.promoter;
+            if (document.getElementById('editCoordinatorName')) document.getElementById('editCoordinatorName').innerText = item.coordinator;
+            if (document.getElementById('editZoneName')) document.getElementById('editZoneName').innerText = item.zone;
+            if (document.getElementById('editPeriodName')) document.getElementById('editPeriodName').innerText = item.fortnight + ' (' + item.month + ')';
+            if (document.getElementById('editTemporalName')) document.getElementById('editTemporalName').innerText = item.temporal || 'N/A';
+            if (document.getElementById('editConsignedVal')) document.getElementById('editConsignedVal').value = formatCOP(item.consigned);
+            if (document.getElementById('editLegalizedAmount')) document.getElementById('editLegalizedAmount').value = item.legalized;
+            if (document.getElementById('editStatusSelect')) document.getElementById('editStatusSelect').value = item.status || (item.legalized > 0 ? 'Legalizado' : 'Pendiente');
+            if (document.getElementById('editNotes')) document.getElementById('editNotes').value = item.notes || '';
+            if (document.getElementById('editAvatar')) document.getElementById('editAvatar').innerText = item.promoter.charAt(0).toUpperCase();
+
+            if (document.getElementById('editFavorVal')) document.getElementById('editFavorVal').innerText = formatCOP(valorFavor);
+            if (document.getElementById('editReintegrarVal')) document.getElementById('editReintegrarVal').innerText = formatCOP(valorReintegrar);
+
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function saveDetailChanges() {
+            const id = parseInt(document.getElementById('editRecordId')?.value);
+            const newLegalized = parseFloat(document.getElementById('editLegalizedAmount')?.value) || 0;
+            const newStatus = document.getElementById('editStatusSelect')?.value;
+            const newNotes = document.getElementById('editNotes')?.value;
+
+            const idx = mockData.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                mockData[idx].legalized = newLegalized;
+                mockData[idx].status = newStatus || (newLegalized > 0 ? 'Legalizado' : 'Pendiente');
+                mockData[idx].notes = newNotes;
+
+                if (googleSheetUrl) {
+                    postToGoogleSheets(mockData[idx]);
+                }
+            }
+
+            closeDetailModal();
+            applyFilters();
+        }
+
+        function initCharts() {
+            const elZone = document.getElementById('zoneChart');
+            const elStatus = document.getElementById('statusChart');
+
+            if (!elZone || !elStatus || typeof Chart === 'undefined') return;
+
+            const ctxZone = elZone.getContext('2d');
+            const ctxStatus = elStatus.getContext('2d');
+
+            zoneChartInstance = new Chart(ctxZone, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Consignado', data: [], backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'Legalizado', data: [], backgroundColor: '#10b981', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Legalizado', 'Pendiente'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#10b981', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (!zoneChartInstance || !statusChartInstance) return;
+
+            const zoneTotals = {};
+            filteredData.forEach(item => {
+                if (!zoneTotals[item.zone]) zoneTotals[item.zone] = { consigned: 0, legalized: 0 };
+                zoneTotals[item.zone].consigned += item.consigned;
+                zoneTotals[item.zone].legalized += item.legalized;
+            });
+
+            const labels = Object.keys(zoneTotals);
+            const consignedData = labels.map(l => zoneTotals[l].consigned);
+            const legalizedData = labels.map(l => zoneTotals[l].legalized);
+
+            zoneChartInstance.data.labels = labels;
+            zoneChartInstance.data.datasets[0].data = consignedData;
+            zoneChartInstance.data.datasets[1].data = legalizedData;
+            zoneChartInstance.update();
+
+            const legCount = filteredData.filter(i => i.legalized > 0).length;
+            const pendCount = filteredData.filter(i => i.legalized === 0).length;
+
+            statusChartInstance.data.datasets[0].data = [legCount, pendCount];
+            statusChartInstance.update();
+        }
+
+        function exportCSV() {
+            let csv = 'Promotor,Coordinador,Zona,Año,Mes,Quincena,Temporal,Consignado,Legalizado,Valor a Favor,Valor a Reintegrar,Estado,Notas\n';
+            filteredData.forEach(row => {
+                const valorFavor = row.legalized < row.consigned ? (row.consigned - row.legalized) : 0;
+                const valorReintegrar = row.legalized > row.consigned ? (row.legalized - row.consigned) : 0;
+                const computedStatus = row.legalized > 0 ? 'Legalizado' : 'Pendiente';
+
+                csv += `"${row.promoter}","${row.coordinator}","${row.zone}",${row.year},"${row.month}","${row.fortnight}","${row.temporal}",${row.consigned},${row.legalized},${valorFavor},${valorReintegrar},"${row.status || computedStatus}","${row.notes || ''}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `legalizaciones_ruta_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
