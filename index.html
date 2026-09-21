@@ -61,12 +61,6 @@
 
                 <!-- Botones de Acción Global -->
                 <div class="flex items-center gap-3">
-                    <button onclick="openSheetsModal()" id="sheetsStatusBtn" class="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition shadow-sm">
-                        <span id="sheetsStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                        <span id="sheetsStatusText" class="hidden sm:inline">Google Sheets</span>
-                    </button>
-
                     <button onclick="exportCSV()" class="inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm">
                         <i class="fa-solid fa-file-csv text-emerald-600"></i>
                         <span class="hidden sm:inline">Exportar CSV</span>
@@ -494,10 +488,6 @@
             "Estefanny Ospina": "Occidente"
         };
 
-        /* Estado global */
-        let googleSheetUrl = localStorage.getItem('googleSheetUrl') || '';
-        let isConnectedToSheets = false;
-
         /* Datos de Prueba Realistas */
         let mockData = [
             { id: 1, promoter: "Jhon Alexander Toro", coordinator: "Joan Quintero", zone: "Antioquia 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1500000, legalized: 1500000, status: "Legalizado", notes: "Soportes completos entregados a tiempo." },
@@ -530,103 +520,8 @@
         /* Inicialización Segura */
         window.onload = function() {
             initCharts();
-            if (googleSheetUrl) {
-                const urlInput = document.getElementById('sheetUrlInput');
-                if (urlInput) urlInput.value = googleSheetUrl;
-                loadFromGoogleSheets();
-            } else {
-                updateSheetsBadgeStatus(false, 'Modo Demo / Local');
-                applyFilters();
-            }
+            applyFilters();
         };
-
-        /* Google Sheets Integration */
-        function openSheetsModal() {
-            const modal = document.getElementById('sheetsModal');
-            if (modal) modal.classList.remove('hidden');
-        }
-
-        function closeSheetsModal() {
-            const modal = document.getElementById('sheetsModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        async function loadFromGoogleSheets() {
-            if (!googleSheetUrl) return;
-
-            updateSheetsBadgeStatus(null, 'Sincronizando...');
-
-            try {
-                const res = await fetch(googleSheetUrl);
-                const data = await res.json();
-
-                if (Array.isArray(data)) {
-                    mockData = data.map(item => {
-                        const cons = parseFloat(item.consignado || item.consigned) || 0;
-                        const leg = parseFloat(item.legalizado || item.legalized) || 0;
-                        const autoStatus = leg > 0 ? 'Legalizado' : 'Pendiente';
-
-                        return {
-                            id: parseInt(item.id) || Date.now(),
-                            promoter: item.promoter || item.promotor || '',
-                            coordinator: item.coordinator || item.coordinador || '',
-                            zone: item.zone || item.zona || '',
-                            month: item.month || item.mes || '',
-                            fortnight: item.fortnight || item.quincena || '',
-                            year: parseInt(item.year || item.anio) || 2026,
-                            contract: item.contract || item.contrato || 'Obra Labor',
-                            temporal: item.temporal || '',
-                            consigned: cons,
-                            legalized: leg,
-                            status: item.status || autoStatus,
-                            notes: item.notes || item.observaciones || ''
-                        };
-                    });
-
-                    isConnectedToSheets = true;
-                    updateSheetsBadgeStatus(true, 'Google Sheets (Conectado)');
-                    applyFilters();
-                }
-            } catch (err) {
-                console.warn("No se pudo conectar a Google Sheets. Usando datos locales.", err);
-                isConnectedToSheets = false;
-                updateSheetsBadgeStatus(false, 'Error / Modo Local');
-                applyFilters();
-            }
-        }
-
-        function updateSheetsBadgeStatus(isConnected, text) {
-            const dot = document.getElementById('sheetsStatusDot');
-            const btn = document.getElementById('sheetsStatusBtn');
-            const label = document.getElementById('sheetsStatusText');
-
-            if (label) label.innerText = text;
-
-            if (isConnected === true) {
-                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 transition shadow-sm";
-            } else if (isConnected === false) {
-                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
-                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition shadow-sm";
-            } else {
-                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping";
-                if (btn) btn.className = "inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-amber-800 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-sm";
-            }
-        }
-
-        async function postToGoogleSheets(itemData) {
-            if (!googleSheetUrl) return;
-            try {
-                await fetch(googleSheetUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(itemData)
-                });
-            } catch (e) {
-                console.error("Error al enviar datos a Google Sheets:", e);
-            }
-        }
 
         function applyFilters() {
             const searchEl = document.getElementById('searchInput');
@@ -918,10 +813,6 @@
             };
 
             mockData.unshift(newItem);
-            
-            if (googleSheetUrl) {
-                postToGoogleSheets(newItem);
-            }
 
             closeNewModal();
             applyFilters();
@@ -975,10 +866,6 @@
                 mockData[idx].legalized = newLegalized;
                 mockData[idx].status = newStatus || (newLegalized > 0 ? 'Legalizado' : 'Pendiente');
                 mockData[idx].notes = newNotes;
-
-                if (googleSheetUrl) {
-                    postToGoogleSheets(mockData[idx]);
-                }
             }
 
             closeDetailModal();
