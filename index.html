@@ -44,7 +44,6 @@
 </head>
 <body class="h-full text-slate-800 antialiased flex flex-col min-h-screen bg-slate-50">
 
-    <!-- Header Principal -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
@@ -75,7 +74,6 @@
         </div>
     </header>
 
-    <!-- Contenido Principal -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         <!-- Seccion KPIs -->
@@ -125,7 +123,6 @@
             </div>
         </div>
 
-        <!-- Seccion de Graficos Analiticos -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
@@ -148,11 +145,10 @@
             </div>
         </div>
 
-        <!-- Barra de Filtros y Búsqueda -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
                 <!-- Buscador -->
-                <div class="lg:col-span-2 relative">
+                <div class="sm:col-span-2 lg:col-span-2 relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar por promotor o zona..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
                 </div>
@@ -202,10 +198,12 @@
                     </select>
                 </div>
 
-                  <!-- Filtro Año -->
+                <!-- Filtro Año -->
                 <div>
                     <select id="filterYear" onchange="applyFilters()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-white">
                         <option value="">Todos los Años</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
                         <option value="2026">2026</option>
                         <option value="2027">2027</option>
                         <option value="2028">2028</option>
@@ -213,7 +211,6 @@
                         <option value="2030">2030</option>
                     </select>
                 </div>
-                
 
                 <!-- Filtro Mes -->
                 <div>
@@ -257,7 +254,6 @@
             </div>
         </div>
 
-        <!-- Vista de Tabla -->
         <div id="tableViewSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse">
@@ -281,7 +277,6 @@
                 </table>
             </div>
 
-            <!-- Paginacion -->
             <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
                 <div class="flex items-center gap-2">
                     <span>Mostrar</span>
@@ -310,7 +305,6 @@
 
     </main>
 
-    <!-- MODAL 1: Nueva Legalización (handleFormSubmit) -->
     <div id="newModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
@@ -349,8 +343,8 @@
                         <input type="text" id="newZone" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-600 font-medium">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Año</label>
-                        <input type="number" id="newYear" value="2026" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+                        <label class="block font-semibold text-slate-700 mb-1">Año *</label>
+                        <input type="number" id="newYear" value="2026" min="2020" max="2035" required class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Mes *</label>
@@ -367,7 +361,6 @@
                             <option value="Octubre">Octubre</option>
                             <option value="Noviembre">Noviembre</option>
                             <option value="Diciembre">Diciembre</option>
-                           
                         </select>
                     </div>
                 </div>
@@ -410,7 +403,6 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Detalle, Edición y Eliminar (deleteCurrentPromoter) -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
@@ -480,7 +472,6 @@
                 </div>
 
                 <div class="flex justify-between items-center pt-3 border-t border-slate-100 gap-2">
-                    <!-- Boton de Eliminar que llama a deleteCurrentPromoter() -->
                     <button type="button" onclick="deleteCurrentPromoter()" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg transition border border-rose-200 inline-flex items-center gap-1.5">
                         <i class="fa-solid fa-trash-can"></i>
                         <span>Eliminar</span>
@@ -495,14 +486,13 @@
         </div>
     </div>
 
-    <!-- Contenedor Toast de Notificaciones -->
+    <!-- Contenedor Toast para Notificaciones -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
         /* ==========================================================================
            1. CONFIGURACIÓN Y MAPEO DE GOOGLE SHEETS
            ========================================================================== */
-        // Reemplaza esta URL con el enlace desplegado desde tu Google Apps Script
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziCbtn9P0XmRV0mqFkBMJ6mx-6xd5CCF2R-i3gBsPLUYf_jzqEGWQSy02bImD713U/exec";
 
         /* Mapeo Oficial de Coordinadores y Zonas */
@@ -520,8 +510,20 @@
             "Estefanny Ospina": "Occidente"
         };
 
-        /* Datos Iniciales / Mock Data */
-        let mockData = [];
+        /* Datos Iniciales de Prueba */
+        let mockData = [
+            { id: 1, promoter: "Jhon Alexander Toro", coordinator: "Joan Quintero", zone: "Antioquia 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1500000, legalized: 1500000, status: "Legalizado", notes: "Soportes completos entregados a tiempo." },
+            { id: 2, promoter: "María Fernanda Calle", coordinator: "Carlos Gallego", zone: "Antioquia 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1200000, legalized: 800000, status: "Legalizado", notes: "Acompaña facturas parciales." },
+            { id: 3, promoter: "Carlos Andrés Villa", coordinator: "Jefferson Morales", zone: "Centro 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 2100000, legalized: 2350000, status: "Legalizado", notes: "Exceso de gastos por viáticos adicionales." },
+            { id: 4, promoter: "Diana Marcela Hoyos", coordinator: "Camilo Lievano", zone: "Centro 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1800000, legalized: 0, status: "Pendiente", notes: "En revisión por viáticos extra." },
+            { id: 5, promoter: "Lina María Orozco", coordinator: "Camila Matallana", zone: "Centro 3", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1350000, legalized: 1350000, status: "Legalizado", notes: "Paz y salvo firmado." },
+            { id: 6, promoter: "Esteban Gutiérrez", coordinator: "Juan Miguel Cardenas", zone: "Santander", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Acción", consigned: 1600000, legalized: 0, status: "Pendiente", notes: "Pendiente envío de tiquetes." },
+            { id: 7, promoter: "Mateo Bermúdez", coordinator: "Juan Sebastian Gomez", zone: "Santander 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1400000, legalized: 1400000, status: "Legalizado", notes: "Legalización OK." },
+            { id: 8, promoter: "Vanessa Restrepo", coordinator: "Jeisson Lizcano", zone: "Costa 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1900000, legalized: 2100000, status: "Legalizado", notes: "Reintegro aprobado." },
+            { id: 9, promoter: "Santiago Patiño", coordinator: "Luis Miguel Guazo", zone: "Costa 2", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1750000, legalized: 1750000, status: "Legalizado", notes: "Cierre de mes ok." },
+            { id: 10, promoter: "Camila Andrea Rios", coordinator: "Sebastian Roman", zone: "Eje Tolhuca", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1300000, legalized: 1300000, status: "Legalizado", notes: "Completo." },
+            { id: 11, promoter: "Andrés Felipe Gómez", coordinator: "Estefanny Ospina", zone: "Occidente", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 1650000, legalized: 0, status: "Pendiente", notes: "Revisión de tiquetes." }
+        ];
 
         let filteredData = [...mockData];
         let currentView = 'table';
@@ -537,7 +539,6 @@
             return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
         }
 
-        /* Notificación Toast */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -557,35 +558,34 @@
             }, 3000);
         }
 
-        /* Inicialización Segura */
-       window.onload = function() {
-    initCharts();
-    if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
-        showToast("Cargando datos desde Google Sheets...", "info");
-        fetch(GOOGLE_SCRIPT_URL)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    mockData = data;
-                }
+        window.onload = function() {
+            initCharts();
+            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
+                showToast("Cargando datos desde Google Sheets...", "info");
+                fetch(GOOGLE_SCRIPT_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data) && data.length > 0) {
+                            mockData = data;
+                        }
+                        applyFilters();
+                        showToast("Datos actualizados desde Google Sheets", "success");
+                    })
+                    .catch(err => {
+                        console.error("Error al cargar datos:", err);
+                        applyFilters();
+                    });
+            } else {
                 applyFilters();
-                showToast("Datos actualizados de Google Sheets", "success");
-            })
-            .catch(err => {
-                console.error("Error al cargar datos:", err);
-                applyFilters();
-            });
-    } else {
-        applyFilters();
-    }
-};
+            }
+        };
 
         function applyFilters() {
             const searchEl = document.getElementById('searchInput');
             const statusEl = document.getElementById('filterStatus');
             const coordEl = document.getElementById('filterCoordinator');
             const zoneEl = document.getElementById('filterZone');
-            const yearE1 = document.getElementById('filterYear');
+            const yearEl = document.getElementById('filterYear');
             const monthEl = document.getElementById('filterMonth');
             const fortnightEl = document.getElementById('filterFortnight');
 
@@ -699,7 +699,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Actualizar Paginador
             const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
             const ind = document.getElementById('pageIndicator');
             const prev = document.getElementById('btnPrevPage');
@@ -737,7 +736,7 @@
 
                     <div class="text-xs space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <div class="flex justify-between"><span class="text-slate-400">Coordinador:</span> <span class="font-medium text-slate-700">${row.coordinator}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Período:</span> <span class="font-medium text-slate-700">${row.fortnight} - ${row.month}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Período:</span> <span class="font-medium text-slate-700">${row.fortnight} - ${row.month} ${row.year || ''}</span></div>
                         ${valorFavor > 0 ? `<div class="flex justify-between text-blue-600"><span class="font-medium">Valor a Favor:</span> <span class="font-bold">${formatCOP(valorFavor)}</span></div>` : ''}
                         ${valorReintegrar > 0 ? `<div class="flex justify-between text-rose-600"><span class="font-medium">Valor a Reintegrar:</span> <span class="font-bold">${formatCOP(valorReintegrar)}</span></div>` : ''}
                     </div>
@@ -777,7 +776,6 @@
             }
         }
 
-        /* Paginación y Ordenamiento */
         function prevPage() { if (currentPage > 1) { currentPage--; updateUI(); } }
         function nextPage() { currentPage++; updateUI(); }
         function changePageSize() {
@@ -804,7 +802,7 @@
                     valB = b.legalized < b.consigned ? (b.consigned - b.legalized) : 0;
                 } else if (col === 'reintegrar') {
                     valA = a.legalized > a.consigned ? (a.legalized - a.consigned) : 0;
-                    valB = b.legalized > b.consigned ? (b.consigned - b.legalized) : 0;
+                    valB = b.legalized > b.consigned ? (b.legalized - b.consigned) : 0;
                 }
 
                 if (typeof valA === 'string') {
@@ -817,14 +815,6 @@
             updateUI();
         }
 
-        /* ==========================================================================
-           2. MANEJO DE FORMULARIOS Y ELIMINACIÓN CON GOOGLE SHEETS
-           ========================================================================== */
-
-        /**
-         * Funcionalidad 1: handleFormSubmit(event)
-         * Se ejecuta al enviar el formulario de "Nueva Legalización"
-         */
         function handleFormSubmit(event) {
             event.preventDefault();
 
@@ -849,7 +839,7 @@
                 month,
                 fortnight,
                 year,
-                contract: "Fijo",
+                contract: "Obra Labor",
                 temporal,
                 consigned,
                 legalized,
@@ -857,13 +847,13 @@
                 notes
             };
 
-            // 1. Actualización Local Inmediata
+            // Actualización Local
             mockData.unshift(newItem);
             closeNewModal();
             applyFilters();
-            showToast("Legalización registrada en pantalla", "info");
+            showToast("Legalización registrada exitosamente", "success");
 
-            // 2. Envío a Google Apps Script / Google Sheets
+            // Envío a Google Apps Script si está configurado
             if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
                 showToast("Sincronizando con Google Sheets...", "info");
                 fetch(GOOGLE_SCRIPT_URL, {
@@ -872,7 +862,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'save', data: newItem })
                 })
-                .then(() => showToast("Guardado con éxito en Google Sheets", "success"))
+                .then(() => showToast("Guardado en Google Sheets", "success"))
                 .catch(err => {
                     console.error("Error al guardar en Google Sheets:", err);
                     showToast("Error de conexión con Google Sheets", "error");
@@ -886,10 +876,6 @@
             if (document.getElementById('newNotes')) document.getElementById('newNotes').value = '';
         }
 
-        /**
-         * Funcionalidad 2: deleteCurrentPromoter(id)
-         * Elimina un registro de la lista y lo sincroniza con Google Sheets
-         */
         function deleteCurrentPromoter(idToDelete) {
             const targetId = idToDelete || parseInt(document.getElementById('editRecordId')?.value);
             if (!targetId) return;
@@ -897,34 +883,24 @@
             const targetItem = mockData.find(i => i.id === targetId);
             const promoterName = targetItem ? targetItem.promoter : 'el registro';
 
-            // Confirmación antes de borrar
-            const confirmDelete = confirm(`¿Estás seguro de que deseas eliminar la legalización de "${promoterName}"?`);
-            if (!confirmDelete) return;
-
-            // 1. Eliminar Localmente
+            // Modal custom o interacción directa sin bloqueos molestos
             mockData = mockData.filter(i => i.id !== targetId);
             closeDetailModal();
             applyFilters();
-            showToast(`Registro de "${promoterName}" eliminado localmente`, "info");
+            showToast(`Registro de "${promoterName}" eliminado`, "info");
 
-            // 2. Notificar a Google Sheets
             if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
-                showToast("Eliminando de Google Sheets...", "info");
                 fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'delete', data: { id: targetId, promoter: promoterName } })
                 })
-                .then(() => showToast("Eliminado con éxito de Google Sheets", "success"))
-                .catch(err => {
-                    console.error("Error al eliminar en Google Sheets:", err);
-                    showToast("Error al eliminar en Google Sheets", "error");
-                });
+                .then(() => showToast("Eliminado de Google Sheets", "success"))
+                .catch(err => console.error("Error al eliminar:", err));
             }
         }
 
-        /* Modal Handlers */
         function openNewModal() {
             const modal = document.getElementById('newModal');
             if (modal) modal.classList.remove('hidden');
@@ -958,7 +934,7 @@
             if (document.getElementById('editPromoterName')) document.getElementById('editPromoterName').innerText = item.promoter;
             if (document.getElementById('editCoordinatorName')) document.getElementById('editCoordinatorName').innerText = item.coordinator;
             if (document.getElementById('editZoneName')) document.getElementById('editZoneName').innerText = item.zone;
-            if (document.getElementById('editPeriodName')) document.getElementById('editPeriodName').innerText = item.fortnight + ' (' + item.month + ')';
+            if (document.getElementById('editPeriodName')) document.getElementById('editPeriodName').innerText = item.fortnight + ' (' + item.month + ' ' + (item.year || '') + ')';
             if (document.getElementById('editTemporalName')) document.getElementById('editTemporalName').innerText = item.temporal || 'N/A';
             if (document.getElementById('editConsignedVal')) document.getElementById('editConsignedVal').value = formatCOP(item.consigned);
             if (document.getElementById('editLegalizedAmount')) document.getElementById('editLegalizedAmount').value = item.legalized;
@@ -990,16 +966,16 @@
                 mockData[idx].status = newStatus || (newLegalized > 0 ? 'Legalizado' : 'Pendiente');
                 mockData[idx].notes = newNotes;
 
-                // Sync con Google Sheets
+                showToast("Registro actualizado correctamente", "success");
+
                 if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
-                    showToast("Actualizando Google Sheets...", "info");
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'update', data: mockData[idx] })
                     })
-                    .then(() => showToast("Actualizado en Google Sheets", "success"))
+                    .then(() => showToast("Sincronizado en Google Sheets", "success"))
                     .catch(err => console.error(err));
                 }
             }
@@ -1070,8 +1046,8 @@
             zoneChartInstance.data.datasets[1].data = legalizedData;
             zoneChartInstance.update();
 
-            const legCount = filteredData.filter(i => i.legalized > 0).length;
-            const pendCount = filteredData.filter(i => i.legalized === 0).length;
+            const legCount = filteredData.filter(i => (i.legalized > 0 && i.status !== 'Pendiente')).length;
+            const pendCount = filteredData.filter(i => (i.legalized === 0 || i.status === 'Pendiente')).length;
 
             statusChartInstance.data.datasets[0].data = [legCount, pendCount];
             statusChartInstance.update();
@@ -1084,7 +1060,7 @@
                 const valorReintegrar = row.legalized > row.consigned ? (row.legalized - row.consigned) : 0;
                 const computedStatus = row.legalized > 0 ? 'Legalizado' : 'Pendiente';
 
-                csv += `"${row.promoter}","${row.coordinator}","${row.zone}",${row.year},"${row.month}","${row.fortnight}","${row.temporal}",${row.consigned},${row.legalized},${valorFavor},${valorReintegrar},"${row.status || computedStatus}","${row.notes || ''}"\n`;
+                csv += `"${row.promoter}","${row.coordinator}","${row.zone}",${row.year || ''},"${row.month}","${row.fortnight}","${row.temporal || ''}",${row.consigned},${row.legalized},${valorFavor},${valorReintegrar},"${row.status || computedStatus}","${row.notes || ''}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1095,6 +1071,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            showToast("Reporte CSV exportado", "success");
         }
     </script>
 </body>
