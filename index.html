@@ -489,7 +489,7 @@
            1. CONFIGURACIÓN Y MAPEO DE GOOGLE SHEETS
            ========================================================================== */
         // Reemplaza esta URL con el enlace desplegado desde tu Google Apps Script
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/TU_SCRIPT_ID/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziCbtn9P0XmRV0mqFkBMJ6mx-6xd5CCF2R-i3gBsPLUYf_jzqEGWQSy02bImD713U/exec";
 
         /* Mapeo Oficial de Coordinadores y Zonas */
         const coordinatorZoneMap = {
@@ -556,10 +556,27 @@
         }
 
         /* Inicialización Segura */
-        window.onload = function() {
-            initCharts();
-            applyFilters();
-        };
+       window.onload = function() {
+    initCharts();
+    if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
+        showToast("Cargando datos desde Google Sheets...", "info");
+        fetch(GOOGLE_SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    mockData = data;
+                }
+                applyFilters();
+                showToast("Datos actualizados de Google Sheets", "success");
+            })
+            .catch(err => {
+                console.error("Error al cargar datos:", err);
+                applyFilters();
+            });
+    } else {
+        applyFilters();
+    }
+};
 
         function applyFilters() {
             const searchEl = document.getElementById('searchInput');
