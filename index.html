@@ -473,6 +473,9 @@
     </div>
 
     <script>
+
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyutlfMny3Kc_ediRcxyLl7Re27wqyX7-CSZRahyy7LerkeVx9gcMxC86a4rcBPXEw/exec";
+
         /* Mapeo Oficial de Coordinadores y Zonas */
         const coordinatorZoneMap = {
             "Joan Quintero": "Antioquia 1",
@@ -518,10 +521,38 @@
         }
 
         /* Inicialización Segura */
-        window.onload = function() {
-            initCharts();
-            applyFilters();
-        };
+  window.onload = function() {
+    lucide.createIcons();
+    populateCoordinatorFilter();
+    populateZoneFilter();
+    initCharts();
+    
+    // Cargar datos en vivo desde Google Sheets
+    loadDataFromGoogleSheets();
+};
+
+function loadDataFromGoogleSheets() {
+    // Muestra indicador de carga o notificación
+    showToast('Cargando información desde Google Sheets...', 'info');
+
+    fetch(GOOGLE_SCRIPT_URL)
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success' && Array.isArray(res.data)) {
+                if (res.data.length > 0) {
+                    appState.promoters = res.data; // Reemplaza los datos por los de Sheets
+                }
+                populateCoordinatorFilter();
+                renderApp();
+                showToast('Datos sincronizados con Google Sheets', 'success');
+            }
+        })
+        .catch(err => {
+            console.error('Error cargando datos:', err);
+            showToast('Usando datos locales (No se pudo conectar a Google Sheets)', 'warning');
+            renderApp();
+        });
+}
 
         function applyFilters() {
             const searchEl = document.getElementById('searchInput');
