@@ -297,7 +297,7 @@
 
     </main>
 
-    <!-- MODAL 1: Nueva Legalización -->
+    <!-- MODAL 1: Nueva Legalización (handleFormSubmit) -->
     <div id="newModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
@@ -305,7 +305,8 @@
                 <button onclick="closeNewModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <form onsubmit="submitNewLegalization(event)" class="p-6 space-y-4 text-xs">
+            <!-- Formulario conectado a handleFormSubmit(event) -->
+            <form onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 text-xs">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Nombre Promotor *</label>
@@ -395,7 +396,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Detalle y Edición -->
+    <!-- MODAL 2: Detalle, Edición y Eliminar (deleteCurrentPromoter) -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
@@ -464,17 +465,31 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="closeDetailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition">Cancelar</button>
-                    <button type="button" onclick="saveDetailChanges()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-md shadow-emerald-600/20">Actualizar Registro</button>
+                <div class="flex justify-between items-center pt-3 border-t border-slate-100 gap-2">
+                    <!-- Boton de Eliminar que llama a deleteCurrentPromoter() -->
+                    <button type="button" onclick="deleteCurrentPromoter()" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg transition border border-rose-200 inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Eliminar</span>
+                    </button>
+
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeDetailModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition">Cancelar</button>
+                        <button type="button" onclick="saveDetailChanges()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition shadow-md shadow-emerald-600/20">Actualizar Registro</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
+    <!-- Contenedor Toast de Notificaciones -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyutlfMny3Kc_ediRcxyLl7Re27wqyX7-CSZRahyy7LerkeVx9gcMxC86a4rcBPXEw/exec";
+    <script>
+        /* ==========================================================================
+           1. CONFIGURACIÓN Y MAPEO DE GOOGLE SHEETS
+           ========================================================================== */
+        // Reemplaza esta URL con el enlace desplegado desde tu Google Apps Script
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/TU_SCRIPT_ID/exec";
 
         /* Mapeo Oficial de Coordinadores y Zonas */
         const coordinatorZoneMap = {
@@ -491,7 +506,7 @@
             "Estefanny Ospina": "Occidente"
         };
 
-        /* Datos de Prueba Realistas */
+        /* Datos Iniciales / Mock Data */
         let mockData = [
             { id: 1, promoter: "Jhon Alexander Toro", coordinator: "Joan Quintero", zone: "Antioquia 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1500000, legalized: 1500000, status: "Legalizado", notes: "Soportes completos entregados a tiempo." },
             { id: 2, promoter: "María Fernanda Calle", coordinator: "Carlos Gallego", zone: "Antioquia 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1200000, legalized: 800000, status: "Legalizado", notes: "Acompaña facturas parciales." },
@@ -520,39 +535,31 @@
             return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
         }
 
+        /* Notificación Toast */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-white';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+
+            toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 transition-all duration-300 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         /* Inicialización Segura */
-  window.onload = function() {
-    lucide.createIcons();
-    populateCoordinatorFilter();
-    populateZoneFilter();
-    initCharts();
-    
-    // Cargar datos en vivo desde Google Sheets
-    loadDataFromGoogleSheets();
-};
-
-function loadDataFromGoogleSheets() {
-    // Muestra indicador de carga o notificación
-    showToast('Cargando información desde Google Sheets...', 'info');
-
-    fetch(GOOGLE_SCRIPT_URL)
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === 'success' && Array.isArray(res.data)) {
-                if (res.data.length > 0) {
-                    appState.promoters = res.data; // Reemplaza los datos por los de Sheets
-                }
-                populateCoordinatorFilter();
-                renderApp();
-                showToast('Datos sincronizados con Google Sheets', 'success');
-            }
-        })
-        .catch(err => {
-            console.error('Error cargando datos:', err);
-            showToast('Usando datos locales (No se pudo conectar a Google Sheets)', 'warning');
-            renderApp();
-        });
-}
+        window.onload = function() {
+            initCharts();
+            applyFilters();
+        };
 
         function applyFilters() {
             const searchEl = document.getElementById('searchInput');
@@ -662,7 +669,7 @@ function loadDataFromGoogleSheets() {
                     <td class="py-3.5 px-4 text-right font-semibold ${valorFavor > 0 ? 'text-blue-600' : 'text-slate-400'}">${formatCOP(valorFavor)}</td>
                     <td class="py-3.5 px-4 text-right font-semibold ${valorReintegrar > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">${formatCOP(valorReintegrar)}</td>
                     <td class="py-3.5 px-4 text-center">
-                        <button onclick="openDetailModal(${row.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Ver / Editar">
+                        <button onclick="openDetailModal(${row.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Ver / Editar / Eliminar">
                             <i class="fa-solid fa-pen-to-square text-base"></i>
                         </button>
                     </td>
@@ -775,7 +782,7 @@ function loadDataFromGoogleSheets() {
                     valB = b.legalized < b.consigned ? (b.consigned - b.legalized) : 0;
                 } else if (col === 'reintegrar') {
                     valA = a.legalized > a.consigned ? (a.legalized - a.consigned) : 0;
-                    valB = b.legalized > b.consigned ? (b.legalized - b.consigned) : 0;
+                    valB = b.legalized > b.consigned ? (b.consigned - b.legalized) : 0;
                 }
 
                 if (typeof valA === 'string') {
@@ -786,6 +793,113 @@ function loadDataFromGoogleSheets() {
             });
 
             updateUI();
+        }
+
+        /* ==========================================================================
+           2. MANEJO DE FORMULARIOS Y ELIMINACIÓN CON GOOGLE SHEETS
+           ========================================================================== */
+
+        /**
+         * Funcionalidad 1: handleFormSubmit(event)
+         * Se ejecuta al enviar el formulario de "Nueva Legalización"
+         */
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const promoter = document.getElementById('newPromoter')?.value || '';
+            const coordinator = document.getElementById('newCoordinator')?.value || '';
+            const zone = document.getElementById('newZone')?.value || '';
+            const year = parseInt(document.getElementById('newYear')?.value) || 2026;
+            const month = document.getElementById('newMonth')?.value || 'Marzo';
+            const fortnight = document.getElementById('newFortnight')?.value || '1ra Quincena';
+            const temporal = document.getElementById('newTemporal')?.value || '';
+            const consigned = parseFloat(document.getElementById('newConsigned')?.value) || 0;
+            const legalized = parseFloat(document.getElementById('newLegalized')?.value) || 0;
+            const notes = document.getElementById('newNotes')?.value || '';
+
+            const status = (legalized > 0) ? 'Legalizado' : 'Pendiente';
+
+            const newItem = {
+                id: Date.now(),
+                promoter,
+                coordinator,
+                zone,
+                month,
+                fortnight,
+                year,
+                contract: "Obra Labor",
+                temporal,
+                consigned,
+                legalized,
+                status,
+                notes
+            };
+
+            // 1. Actualización Local Inmediata
+            mockData.unshift(newItem);
+            closeNewModal();
+            applyFilters();
+            showToast("Legalización registrada en pantalla", "info");
+
+            // 2. Envío a Google Apps Script / Google Sheets
+            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
+                showToast("Sincronizando con Google Sheets...", "info");
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save', data: newItem })
+                })
+                .then(() => showToast("Guardado con éxito en Google Sheets", "success"))
+                .catch(err => {
+                    console.error("Error al guardar en Google Sheets:", err);
+                    showToast("Error de conexión con Google Sheets", "error");
+                });
+            }
+
+            // Limpiar Formulario
+            if (document.getElementById('newPromoter')) document.getElementById('newPromoter').value = '';
+            if (document.getElementById('newConsigned')) document.getElementById('newConsigned').value = '';
+            if (document.getElementById('newLegalized')) document.getElementById('newLegalized').value = '';
+            if (document.getElementById('newNotes')) document.getElementById('newNotes').value = '';
+        }
+
+        /**
+         * Funcionalidad 2: deleteCurrentPromoter(id)
+         * Elimina un registro de la lista y lo sincroniza con Google Sheets
+         */
+        function deleteCurrentPromoter(idToDelete) {
+            const targetId = idToDelete || parseInt(document.getElementById('editRecordId')?.value);
+            if (!targetId) return;
+
+            const targetItem = mockData.find(i => i.id === targetId);
+            const promoterName = targetItem ? targetItem.promoter : 'el registro';
+
+            // Confirmación antes de borrar
+            const confirmDelete = confirm(`¿Estás seguro de que deseas eliminar la legalización de "${promoterName}"?`);
+            if (!confirmDelete) return;
+
+            // 1. Eliminar Localmente
+            mockData = mockData.filter(i => i.id !== targetId);
+            closeDetailModal();
+            applyFilters();
+            showToast(`Registro de "${promoterName}" eliminado localmente`, "info");
+
+            // 2. Notificar a Google Sheets
+            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
+                showToast("Eliminando de Google Sheets...", "info");
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', data: { id: targetId, promoter: promoterName } })
+                })
+                .then(() => showToast("Eliminado con éxito de Google Sheets", "success"))
+                .catch(err => {
+                    console.error("Error al eliminar en Google Sheets:", err);
+                    showToast("Error al eliminar en Google Sheets", "error");
+                });
+            }
         }
 
         /* Modal Handlers */
@@ -809,77 +923,6 @@ function loadDataFromGoogleSheets() {
                     zoneInput.value = coordinatorZoneMap[coord];
                 }
             }
-        }
-
-       function submitNewLegalization(event) {
-    event.preventDefault();
-
-    // 1. Captura los campos del formulario
-    const promoter = document.getElementById('newPromoter')?.value.trim() || '';
-    const coordinator = document.getElementById('newCoordinator')?.value || '';
-    const zone = document.getElementById('newZone')?.value || '';
-    const year = parseInt(document.getElementById('newYear')?.value) || 2026;
-    const month = document.getElementById('newMonth')?.value || 'Marzo';
-    const fortnight = document.getElementById('newFortnight')?.value || '1ra Quincena';
-    const temporal = document.getElementById('newTemporal')?.value || '';
-    const consigned = parseFloat(document.getElementById('newConsigned')?.value) || 0;
-    const legalized = parseFloat(document.getElementById('newLegalized')?.value) || 0;
-    const notes = document.getElementById('newNotes')?.value || '';
-
-    const status = (legalized > 0) ? 'Legalizado' : 'Pendiente';
-
-    // 2. Construye el objeto con los datos de legalización
-    const newItem = {
-        id: `LEG-${Date.now()}`,
-        promoter,
-        coordinator,
-        zone,
-        month,
-        fortnight,
-        year,
-        contract: "Obra Labor",
-        temporal,
-        consigned,
-        legalized,
-        status,
-        notes
-    };
-
-    // 3. Actualización local inmediata para respuesta instantánea en la interfaz
-    legalizationsData.unshift(newItem);
-    closeNewModal();
-    renderApp();
-
-    // 4. Envío asíncrono a Google Sheets via POST
-    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL) {
-        showToast('Guardando en Google Sheets...', 'info');
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Permite la comunicación entre dominios cruzados
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'save', data: newItem })
-        })
-        .then(() => {
-            showToast('Guardado exitosamente en Google Sheets', 'success');
-        })
-        .catch(err => {
-            console.error('Error enviando a Google Sheets:', err);
-            showToast('Error al guardar en la nube', 'warning');
-        });
-    }
-}
-
-            mockData.unshift(newItem);
-
-            closeNewModal();
-            applyFilters();
-
-            // Limpiar Formulario
-            if (document.getElementById('newPromoter')) document.getElementById('newPromoter').value = '';
-            if (document.getElementById('newConsigned')) document.getElementById('newConsigned').value = '';
-            if (document.getElementById('newLegalized')) document.getElementById('newLegalized').value = '';
-            if (document.getElementById('newNotes')) document.getElementById('newNotes').value = '';
         }
 
         function openDetailModal(id) {
@@ -924,6 +967,19 @@ function loadDataFromGoogleSheets() {
                 mockData[idx].legalized = newLegalized;
                 mockData[idx].status = newStatus || (newLegalized > 0 ? 'Legalizado' : 'Pendiente');
                 mockData[idx].notes = newNotes;
+
+                // Sync con Google Sheets
+                if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("TU_SCRIPT_ID")) {
+                    showToast("Actualizando Google Sheets...", "info");
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'update', data: mockData[idx] })
+                    })
+                    .then(() => showToast("Actualizado en Google Sheets", "success"))
+                    .catch(err => console.error(err));
+                }
             }
 
             closeDetailModal();
