@@ -507,19 +507,7 @@
         };
 
         /* Datos Iniciales / Mock Data */
-        let mockData = [
-            { id: 1, promoter: "Jhon Alexander Toro", coordinator: "Joan Quintero", zone: "Antioquia 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1500000, legalized: 1500000, status: "Legalizado", notes: "Soportes completos entregados a tiempo." },
-            { id: 2, promoter: "María Fernanda Calle", coordinator: "Carlos Gallego", zone: "Antioquia 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1200000, legalized: 800000, status: "Legalizado", notes: "Acompaña facturas parciales." },
-            { id: 3, promoter: "Carlos Andrés Villa", coordinator: "Jefferson Morales", zone: "Centro 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 2100000, legalized: 2350000, status: "Legalizado", notes: "Exceso de gastos por viáticos adicionales." },
-            { id: 4, promoter: "Diana Marcela Hoyos", coordinator: "Camilo Lievano", zone: "Centro 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1800000, legalized: 0, status: "Pendiente", notes: "En revisión por viáticos extra." },
-            { id: 5, promoter: "Lina María Orozco", coordinator: "Camila Matallana", zone: "Centro 3", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1350000, legalized: 1350000, status: "Legalizado", notes: "Paz y salvo firmado." },
-            { id: 6, promoter: "Esteban Gutiérrez", coordinator: "Juan Miguel Cardenas", zone: "Santander", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Acción", consigned: 1600000, legalized: 0, status: "Pendiente", notes: "Pendiente envío de tiquetes." },
-            { id: 7, promoter: "Mateo Bermúdez", coordinator: "Juan Sebastian Gomez", zone: "Santander 2", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1400000, legalized: 1400000, status: "Legalizado", notes: "Legalización OK." },
-            { id: 8, promoter: "Vanessa Restrepo", coordinator: "Jeisson Lizcano", zone: "Costa 1", month: "Marzo", fortnight: "1ra Quincena", year: 2026, contract: "Fijo", temporal: "Directo", consigned: 1900000, legalized: 2100000, status: "Legalizado", notes: "Reintegro aprobado." },
-            { id: 9, promoter: "Santiago Patiño", coordinator: "Luis Miguel Guazo", zone: "Costa 2", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Adecco", consigned: 1750000, legalized: 1750000, status: "Legalizado", notes: "Cierre de mes ok." },
-            { id: 10, promoter: "Camila Andrea Rios", coordinator: "Sebastian Roman", zone: "Eje Tolhuca", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Obra Labor", temporal: "Manpower", consigned: 1300000, legalized: 1300000, status: "Legalizado", notes: "Completo." },
-            { id: 11, promoter: "Andrés Felipe Gómez", coordinator: "Estefanny Ospina", zone: "Occidente", month: "Febrero", fortnight: "2da Quincena", year: 2026, contract: "Fijo", temporal: "Adecco", consigned: 1650000, legalized: 0, status: "Pendiente", notes: "Revisión de tiquetes." }
-        ];
+        let mockData = [];
 
         let filteredData = [...mockData];
         let currentView = 'table';
@@ -844,7 +832,7 @@
                 month,
                 fortnight,
                 year,
-                contract: "Obra Labor",
+                contract: "Fijo",
                 temporal,
                 consigned,
                 legalized,
