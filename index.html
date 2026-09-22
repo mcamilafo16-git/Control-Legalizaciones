@@ -811,37 +811,64 @@ function loadDataFromGoogleSheets() {
             }
         }
 
-        function submitNewLegalization(event) {
-            event.preventDefault();
+       function submitNewLegalization(event) {
+    event.preventDefault();
 
-            const promoter = document.getElementById('newPromoter')?.value || '';
-            const coordinator = document.getElementById('newCoordinator')?.value || '';
-            const zone = document.getElementById('newZone')?.value || '';
-            const year = parseInt(document.getElementById('newYear')?.value) || 2026;
-            const month = document.getElementById('newMonth')?.value || 'Marzo';
-            const fortnight = document.getElementById('newFortnight')?.value || '1ra Quincena';
-            const temporal = document.getElementById('newTemporal')?.value || '';
-            const consigned = parseFloat(document.getElementById('newConsigned')?.value) || 0;
-            const legalized = parseFloat(document.getElementById('newLegalized')?.value) || 0;
-            const notes = document.getElementById('newNotes')?.value || '';
+    // 1. Captura los campos del formulario
+    const promoter = document.getElementById('newPromoter')?.value.trim() || '';
+    const coordinator = document.getElementById('newCoordinator')?.value || '';
+    const zone = document.getElementById('newZone')?.value || '';
+    const year = parseInt(document.getElementById('newYear')?.value) || 2026;
+    const month = document.getElementById('newMonth')?.value || 'Marzo';
+    const fortnight = document.getElementById('newFortnight')?.value || '1ra Quincena';
+    const temporal = document.getElementById('newTemporal')?.value || '';
+    const consigned = parseFloat(document.getElementById('newConsigned')?.value) || 0;
+    const legalized = parseFloat(document.getElementById('newLegalized')?.value) || 0;
+    const notes = document.getElementById('newNotes')?.value || '';
 
-            const status = (legalized > 0) ? 'Legalizado' : 'Pendiente';
+    const status = (legalized > 0) ? 'Legalizado' : 'Pendiente';
 
-            const newItem = {
-                id: Date.now(),
-                promoter,
-                coordinator,
-                zone,
-                month,
-                fortnight,
-                year,
-                contract: "Obra Labor",
-                temporal,
-                consigned,
-                legalized,
-                status,
-                notes
-            };
+    // 2. Construye el objeto con los datos de legalización
+    const newItem = {
+        id: `LEG-${Date.now()}`,
+        promoter,
+        coordinator,
+        zone,
+        month,
+        fortnight,
+        year,
+        contract: "Obra Labor",
+        temporal,
+        consigned,
+        legalized,
+        status,
+        notes
+    };
+
+    // 3. Actualización local inmediata para respuesta instantánea en la interfaz
+    legalizationsData.unshift(newItem);
+    closeNewModal();
+    renderApp();
+
+    // 4. Envío asíncrono a Google Sheets via POST
+    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL) {
+        showToast('Guardando en Google Sheets...', 'info');
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Permite la comunicación entre dominios cruzados
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', data: newItem })
+        })
+        .then(() => {
+            showToast('Guardado exitosamente en Google Sheets', 'success');
+        })
+        .catch(err => {
+            console.error('Error enviando a Google Sheets:', err);
+            showToast('Error al guardar en la nube', 'warning');
+        });
+    }
+}
 
             mockData.unshift(newItem);
 
